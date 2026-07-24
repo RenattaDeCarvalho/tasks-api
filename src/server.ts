@@ -1,10 +1,7 @@
-import express from "express";
+import { app } from './app';
 
-const app = express();
+const PORT = 3000;
 
-app.use(express.json());
-
-
-app.listen(3000, () => {
-  console.log("Server running: PORT 3000");
+app.listen(PORT, () => {
+  console.log(`🚀 Listings Service running on port ${PORT}`);
 });
