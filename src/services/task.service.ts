@@ -20,14 +20,12 @@ export class TaskService {
     return tasks;
   }
 
-  findById(id: Number): Task | undefined {
-    const taskId = Number(id);
+  findById(taskId: number): Task | undefined {
     return tasks.find(task => task.id === taskId);
   }
 
   findByStatus(status: TaskStatus): Task[] {
-    const filteredTasks = tasks.filter(task => task.status === status);
-    return filteredTasks;
+    return tasks.filter(task => task.status === status);
   }
 
   update(taskId: number, dataUpdate: UpdateTaskDTO): Task | undefined {
@@ -51,6 +49,6 @@ export class TaskService {
     }
 
     tasks.splice(taskIndex, 1);
-    return true;  
+    return true;
   }
 }
