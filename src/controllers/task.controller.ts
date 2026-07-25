@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { TaskService } from '../services/task.service';
-import { TaskStatus, TaskPriority, CreateTaskDTO } from "../models/task.model";
+import { TaskStatus, TaskPriority, CreateTaskDTO, UpdateTaskDTO } from "../models/task.model";
 
 export class TaskController {
     private taskService = new TaskService();
@@ -10,51 +10,59 @@ export class TaskController {
             const tasks = this.taskService.list();
 
             return res.status(200).json(tasks);
-        } catch (error) {
+        } catch {
             return res.status(500).json({
                 message: "Error fetching tasks."
             });
         }
     }
 
-    create = (req: Request, res: Response) => {
-        const { title, description, priority } = req.body as CreateTaskDTO;
+    create = (req: Request, res: Response): Response => {
+        try {
+            const { title, description, priority } = req.body as CreateTaskDTO;
 
-        if (!title || !description || !priority) {
-            return res.status(400).json({
-                message: "All fields are required."
+            if (!title || !description || !priority) {
+                return res.status(400).json({
+                    message: "All fields are required."
+                });
+            }
+            const isValidPriority = Object.values(TaskPriority).includes(
+                priority as TaskPriority
+            );
+
+            if (!isValidPriority) {
+                return res.status(400).json({
+                    message: "Invalid priority."
+                });
+            }
+
+            const newTask = this.taskService.create({
+                title,
+                description,
+                priority: priority as TaskPriority
+            });
+
+            return res.status(201).json(newTask);
+        } catch {
+            return res.status(500).json({
+                message: "Error creating task."
             });
         }
-        const isValidPriority = Object.values(TaskPriority).includes(
-            priority as TaskPriority
-        );
-
-        if (!isValidPriority) {
-            return res.status(400).json({
-                message: "Invalid priority."
-            });
-        }
-
-        const newTask = this.taskService.create({
-            title,
-            description,
-            priority: priority as TaskPriority
-        });
-
-        return res.status(201).json(newTask);
     }
 
     findByStatus = (req: Request, res: Response): Response => {
         try {
-            const status = String(req.query.status);
-
-            if (!status) {
+            const { status } = req.query;
+            if (!status || typeof status !== "string") {
                 return res.status(400).json({
                     message: "Status query parameter is required."
                 });
             }
-            const isValidStatus = Object.values(TaskStatus).includes( // Precisamos transformar o TaskStatus em um array para poder usar o metodo 'includes()', para isso, usamos Object.values(TaskStatus), que retorna um array contendo todos os valores do enum TaskStatus, ficando assim : ["pending", "in_progress", "completed"];
-                status as TaskStatus // Essa linha fala: Considere que status é do tipo TaskStatus.
+
+            // Object.values transforma os valores do enum em um array
+            // para que possamos verificar o status com includes().
+            const isValidStatus = Object.values(TaskStatus).includes(
+                status as TaskStatus
             );
 
             if (!isValidStatus) {
@@ -63,11 +71,10 @@ export class TaskController {
                 });
             }
 
-
             const tasks = this.taskService.findByStatus(status as TaskStatus);
 
             return res.status(200).json(tasks);
-        } catch (error) {
+        } catch {
             return res.status(500).json({
                 message: "Error fetching tasks."
             });
@@ -76,42 +83,41 @@ export class TaskController {
 
     findById = (req: Request, res: Response): Response => {
         try {
-            const { id } = req.params;
-            if (!id) {
+            const taskId = Number(req.params.id);
+            if (Number.isNaN(taskId)) {
                 return res.status(400).json({
-                    message: "Task ID is required."
+                    message: "Task ID must be a valid number."
                 });
             }
 
-            const task = this.taskService.findById(Number(id));
+            const task = this.taskService.findById(taskId);
 
             if (!task) {
                 return res.status(404).json({
                     message: "Task not found."
                 });
             }
-            const tasks = this.taskService.list();
 
-            return res.status(200).json(tasks);
-        } catch (error) {
+            return res.status(200).json(task);
+        } catch {
             return res.status(500).json({
-                message: "Error fetching tasks."
+                message: "Error fetching task."
             });
         }
     }
 
     update = (req: Request, res: Response): Response => {
         try {
-            const { id } = req.params;
-            const dataUpdate = req.body;
+            const dataUpdate = req.body as UpdateTaskDTO;
 
-            if (!id) {
+            const taskId = Number(req.params.id);
+            if (Number.isNaN(taskId)) {
                 return res.status(400).json({
-                    message: "Task ID is required."
+                    message: "Task ID must be a valid number."
                 });
             }
 
-            if (Object.keys(dataUpdate).length === 0) {
+            if (!dataUpdate || Object.keys(dataUpdate).length === 0) {
                 return res.status(400).json({
                     message: "Update data is required."
                 });
@@ -136,7 +142,7 @@ export class TaskController {
             }
 
             const updatedTask = this.taskService.update(
-                Number(id),
+                taskId,
                 dataUpdate
             );
 
@@ -156,12 +162,11 @@ export class TaskController {
 
     delete = (req: Request, res: Response): Response => {
         try {
-            const { id } = req.params;
-            const taskId = Number(id);
+            const taskId = Number(req.params.id);
 
-            if (!id) {
+            if (Number.isNaN(taskId)) {
                 return res.status(400).json({
-                    message: "Task ID is required."
+                    message: "Task ID must be a valid number."
                 });
             }
 
@@ -176,7 +181,7 @@ export class TaskController {
             return res.status(200).json({
                 message: "Task deleted successfully."
             });
-        } catch (error) {
+        } catch {
             return res.status(500).json({
                 message: "Error deleting task."
             });
