@@ -1,11 +1,11 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { TaskService } from '../services/task.service';
 import { TaskStatus, TaskPriority, CreateTaskDTO, UpdateTaskDTO } from "../models/task.model";
 
 export class TaskController {
     private taskService = new TaskService();
 
-    list = (req: Request, res: Response): Response => {
+    list = (req: Request, res: Response, next: NextFunction): Response | void => {
         try {
             // parametros aceitos
             const allowedFilters = ["status", "priority"];
@@ -53,14 +53,12 @@ export class TaskController {
 
             return res.status(200).json(tasks);
 
-        } catch {
-            return res.status(500).json({
-                message: "Error fetching tasks."
-            });
+        } catch (error) {
+            next(error);
         }
     }
 
-    create = (req: Request, res: Response): Response => {
+    create = (req: Request, res: Response, next: NextFunction): Response | void=> {
         try {
             const { title, description, priority } = req.body as CreateTaskDTO;
 
@@ -86,14 +84,12 @@ export class TaskController {
             });
 
             return res.status(201).json(newTask);
-        } catch {
-            return res.status(500).json({
-                message: "Error creating task."
-            });
+        } catch (error) {
+            next(error);
         }
     }
 
-    findById = (req: Request, res: Response): Response => {
+    findById = (req: Request, res: Response, next: NextFunction): Response | void => {
         try {
             const taskId = Number(req.params.id);
             if (Number.isNaN(taskId)) {
@@ -111,14 +107,12 @@ export class TaskController {
             }
 
             return res.status(200).json(task);
-        } catch {
-            return res.status(500).json({
-                message: "Error fetching task."
-            });
+        } catch (error) {
+            next(error);
         }
     }
 
-    update = (req: Request, res: Response): Response => {
+    update = (req: Request, res: Response, next: NextFunction): Response | void => {
         try {
             const dataUpdate = req.body as UpdateTaskDTO;
 
@@ -165,14 +159,12 @@ export class TaskController {
             }
 
             return res.status(200).json(updatedTask);
-        } catch {
-            return res.status(500).json({
-                message: "Error updating task."
-            });
+        } catch (error) {
+            next(error);
         }
     };
 
-    delete = (req: Request, res: Response): Response => {
+    delete = (req: Request, res: Response, next: NextFunction): Response | void => {
         try {
             const taskId = Number(req.params.id);
 
@@ -193,10 +185,8 @@ export class TaskController {
             return res.status(200).json({
                 message: "Task deleted successfully."
             });
-        } catch {
-            return res.status(500).json({
-                message: "Error deleting task."
-            });
+        } catch (error) {
+            next(error);
         }
     }
 }
