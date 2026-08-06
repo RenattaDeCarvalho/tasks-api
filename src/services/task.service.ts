@@ -1,4 +1,4 @@
-import { Task, TaskStatus, CreateTaskDTO, UpdateTaskDTO } from '../models/task.model';
+import { Task, TaskStatus, TaskPriority, CreateTaskDTO, UpdateTaskDTO } from '../models/task.model';
 import { tasks } from '../data/tasks.data';
 
 export class TaskService {
@@ -26,6 +26,10 @@ export class TaskService {
 
   findByStatus(status: TaskStatus): Task[] {
     return tasks.filter(task => task.status === status);
+  }
+
+  findByPriority(priority : TaskPriority): Task[] {
+    return tasks.filter(task => task.priority === priority);
   }
 
   update(taskId: number, dataUpdate: UpdateTaskDTO): Task | undefined {

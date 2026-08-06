@@ -81,6 +81,35 @@ export class TaskController {
         }
     }
 
+    findByPriority = (req: Request, res: Response): Response => {
+        try {
+            const { priority } = req.query;
+            if (!priority || typeof priority !== "string") {
+                return res.status(400).json({
+                    message: "Priority query parameter is required."
+                });
+            }
+
+            const isValidPriority = Object.values(TaskPriority).includes(
+                priority as TaskPriority
+            );
+
+            if (!isValidPriority) {
+                return res.status(400).json({
+                    message: "Invalid priority."
+                });
+            }
+
+            const tasks = this.taskService.findByPriority(priority as TaskPriority);
+
+            return res.status(200).json(tasks);
+        } catch {
+            return res.status(500).json({
+                message: "Error fetching tasks."
+            });
+        }
+    }
+
     findById = (req: Request, res: Response): Response => {
         try {
             const taskId = Number(req.params.id);
