@@ -56,7 +56,7 @@ http://localhost:3000
 
 ## Rotas disponíveis
 
-### GET /health
+### GET /health-check
 
 Verifica se a API está funcionando.
 
