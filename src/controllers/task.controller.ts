@@ -5,11 +5,54 @@ import { TaskStatus, TaskPriority, CreateTaskDTO, UpdateTaskDTO } from "../model
 export class TaskController {
     private taskService = new TaskService();
 
-    list = (_req: Request, res: Response): Response => {
+    list = (req: Request, res: Response): Response => {
         try {
-            const tasks = this.taskService.list();
+            // parametros aceitos
+            const allowedFilters = ["status", "priority"];
+
+            // Object.keys(req.query) pega apenas as chaves do objeto
+            // ex: ["status", "priority"]
+            const receivedFilters = Object.keys(req.query);
+
+            // O some() verifica se pelo menos um elemento do array atende a condição
+            const hasInvalidFilter = receivedFilters.some(
+                //aqui ele nega a condição verificando se os parametro estao invalidos e retorna um booleano
+                filter => !allowedFilters.includes(filter)
+            );
+
+            if (hasInvalidFilter) {
+                return res.status(400).json({
+                    message: "Invalid filter parameter."
+                });
+            }
+
+            const { status, priority } = req.query;
+
+            if (
+                status !== undefined &&
+                !Object.values(TaskStatus).includes(status as TaskStatus)
+            ) {
+                return res.status(400).json({
+                    message: "Invalid status."
+                });
+            }
+
+            if (
+                priority !== undefined &&
+                !Object.values(TaskPriority).includes(priority as TaskPriority)
+            ) {
+                return res.status(400).json({
+                    message: "Invalid priority."
+                });
+            }
+
+            const tasks = this.taskService.list(
+                status as TaskStatus | undefined,
+                priority as TaskPriority | undefined
+            );
 
             return res.status(200).json(tasks);
+
         } catch {
             return res.status(500).json({
                 message: "Error fetching tasks."
@@ -46,66 +89,6 @@ export class TaskController {
         } catch {
             return res.status(500).json({
                 message: "Error creating task."
-            });
-        }
-    }
-
-    findByStatus = (req: Request, res: Response): Response => {
-        try {
-            const { status } = req.query;
-            if (!status || typeof status !== "string") {
-                return res.status(400).json({
-                    message: "Status query parameter is required."
-                });
-            }
-
-            // Object.values transforma os valores do enum em um array
-            // para que possamos verificar o status com includes().
-            const isValidStatus = Object.values(TaskStatus).includes(
-                status as TaskStatus
-            );
-
-            if (!isValidStatus) {
-                return res.status(400).json({
-                    message: "Invalid status."
-                });
-            }
-
-            const tasks = this.taskService.findByStatus(status as TaskStatus);
-
-            return res.status(200).json(tasks);
-        } catch {
-            return res.status(500).json({
-                message: "Error fetching tasks."
-            });
-        }
-    }
-
-    findByPriority = (req: Request, res: Response): Response => {
-        try {
-            const { priority } = req.query;
-            if (!priority || typeof priority !== "string") {
-                return res.status(400).json({
-                    message: "Priority query parameter is required."
-                });
-            }
-
-            const isValidPriority = Object.values(TaskPriority).includes(
-                priority as TaskPriority
-            );
-
-            if (!isValidPriority) {
-                return res.status(400).json({
-                    message: "Invalid priority."
-                });
-            }
-
-            const tasks = this.taskService.findByPriority(priority as TaskPriority);
-
-            return res.status(200).json(tasks);
-        } catch {
-            return res.status(500).json({
-                message: "Error fetching tasks."
             });
         }
     }

@@ -23,21 +23,25 @@ export class TaskService {
     return newTask;
   }
 
-  list(): Task[] {
+  list(status?: TaskStatus, priority?: TaskPriority): Task[] {
+    let filteredTasks = [...tasks];
+    if (status) {
+      filteredTasks = filteredTasks.filter(
+        task => task.status === status
+      );
+    }
+    if (priority) {
+      filteredTasks = filteredTasks.filter(
+        task => task.priority === priority
+      );
+    }
+
     // transformamos em timestamp usando o getTime() para poder comparar as datas e ordenar corretamente
-    return [...tasks].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    return filteredTasks.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
   findById(taskId: number): Task | undefined {
     return tasks.find(task => task.id === taskId);
-  }
-
-  findByStatus(status: TaskStatus): Task[] {
-    return tasks.filter(task => task.status === status).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());;
-  }
-
-  findByPriority(priority: TaskPriority): Task[] {
-    return tasks.filter(task => task.priority === priority).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());;
   }
 
   update(taskId: number, dataUpdate: UpdateTaskDTO): Task | undefined {
