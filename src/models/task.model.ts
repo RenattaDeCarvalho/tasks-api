@@ -23,6 +23,7 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   createdAt: Date;
+  updatedAt?: Date;
   completedAt?: Date;
 }
 export interface UpdateTaskDTO {

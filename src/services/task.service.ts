@@ -3,8 +3,15 @@ import { tasks } from '../data/tasks.data';
 
 export class TaskService {
   create({ title, description, priority }: CreateTaskDTO): Task {
+    // aqui usamos o operador ternário parqa facilitar a verificação
+    // se a lista de tarefas está vazia ou não, e assim definir o próximo id
+    const nextId =
+      tasks.length > 0
+        ? Math.max(...tasks.map(task => task.id)) + 1
+        : 1;
+
     const newTask: Task = {
-      id: tasks.length + 1,
+      id: nextId,
       title,
       description,
       status: TaskStatus.PENDING,
@@ -17,7 +24,8 @@ export class TaskService {
   }
 
   list(): Task[] {
-    return tasks;
+    // transformamos em timestamp usando o getTime() para poder comparar as datas e ordenar corretamente
+    return [...tasks].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
   findById(taskId: number): Task | undefined {
@@ -25,23 +33,45 @@ export class TaskService {
   }
 
   findByStatus(status: TaskStatus): Task[] {
-    return tasks.filter(task => task.status === status);
+    return tasks.filter(task => task.status === status).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());;
   }
 
-  findByPriority(priority : TaskPriority): Task[] {
-    return tasks.filter(task => task.priority === priority);
+  findByPriority(priority: TaskPriority): Task[] {
+    return tasks.filter(task => task.priority === priority).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());;
   }
 
   update(taskId: number, dataUpdate: UpdateTaskDTO): Task | undefined {
+    let hasUpdated = false;
     const task = this.findById(taskId);
     if (!task) {
       return undefined;
     }
 
-    if (dataUpdate.title !== undefined) task.title = dataUpdate.title;
-    if (dataUpdate.description !== undefined) task.description = dataUpdate.description;
-    if (dataUpdate.status !== undefined) task.status = dataUpdate.status;
-    if (dataUpdate.priority !== undefined) task.priority = dataUpdate.priority;
+    if (dataUpdate.title !== undefined) {
+      task.title = dataUpdate.title;
+      hasUpdated = true;
+    }
+    if (dataUpdate.description !== undefined) {
+      task.description = dataUpdate.description;
+      hasUpdated = true;
+    }
+    if (dataUpdate.status !== undefined) {
+      task.status = dataUpdate.status;
+      hasUpdated = true;
+    }
+    if (dataUpdate.priority !== undefined) {
+      task.priority = dataUpdate.priority;
+      hasUpdated = true;
+    }
+    if (dataUpdate.status === TaskStatus.COMPLETED) {
+      task.completedAt = new Date();
+    } else {
+      task.completedAt = undefined;
+    }
+
+    if (hasUpdated) {
+      task.updatedAt = new Date();
+    }
 
     return task;
   }
